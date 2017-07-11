@@ -177,6 +177,9 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
   /** Interface to map global name space to HDFS subcluster name spaces. */
   private final FileSubclusterResolver subclusterResolver;
 
+  /** If we use authentication for the connections. */
+  private final boolean serviceAuthEnabled;
+
   /** If we are in safe mode, fail requests as if a standby NN. */
   private volatile boolean safeMode;
 
@@ -253,10 +256,10 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
         .setVerbose(false)
         .build();
 
-    // set service-level authorization security policy
-    if (conf.getBoolean(
-        CommonConfigurationKeys.HADOOP_SECURITY_AUTHORIZATION, false)) {
-      // TODO set security enabled here
+    // Set service-level authorization security policy
+    this.serviceAuthEnabled = conf.getBoolean(
+        CommonConfigurationKeys.HADOOP_SECURITY_AUTHORIZATION, false);
+    if (this.serviceAuthEnabled) {
       rpcServer.refreshServiceAcl(conf, new HDFSPolicyProvider());
     }
 

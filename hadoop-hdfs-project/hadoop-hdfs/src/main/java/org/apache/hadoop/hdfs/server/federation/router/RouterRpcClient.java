@@ -388,7 +388,7 @@ public class RouterRpcClient {
         if (!UserGroupInformation.isSecurityEnabled()) {
           ret = invoke(0, method, proxy, params);
         } else {
-          // TODO we probably should get the token from the connection manager
+          // TODO we should get the token from the connection manager
           // Add the delegation token for proxying the request
           if (proxy instanceof ClientProtocol) {
             ClientProtocol cp = (ClientProtocol) proxy;
