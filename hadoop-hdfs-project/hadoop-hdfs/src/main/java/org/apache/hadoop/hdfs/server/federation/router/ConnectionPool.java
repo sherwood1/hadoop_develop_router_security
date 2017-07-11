@@ -318,9 +318,6 @@ public class ConnectionPool {
         HdfsConstants.SAFEMODE_EXCEPTION_CLASS_NAME);
 
     SocketFactory factory = SocketFactory.getDefault();
-    if (UserGroupInformation.isSecurityEnabled()) {
-      SaslRpcServer.init(conf);
-    }
     InetSocketAddress socket = NetUtils.createSocketAddr(nnAddress);
     final long version = RPC.getProtocolVersion(ClientNamenodeProtocolPB.class);
     ClientNamenodeProtocolPB proxy = RPC.getProtocolProxy(

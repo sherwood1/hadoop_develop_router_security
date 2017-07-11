@@ -57,7 +57,8 @@ public final class FederationUtil {
    *
    * @param beanQuery JMX bean.
    * @param webAddress Web address of the JMX endpoint.
-   * @return JSON with the JMX data
+   * @param conf Configuration for the URL connection.
+   * @return JSON with the JMX data.
    */
   public static JSONArray getJmx(String beanQuery, String webAddress,
       Configuration conf) {
