@@ -28,6 +28,9 @@ import org.apache.hadoop.hdfs.server.federation.store.driver.StateStoreDriver;
 import org.apache.hadoop.hdfs.server.federation.store.records.BaseRecord;
 import org.apache.hadoop.hdfs.server.federation.store.records.Query;
 import org.apache.hadoop.hdfs.server.federation.store.records.QueryResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Base implementation of a State Store driver. It contains default
@@ -42,12 +45,16 @@ import org.apache.hadoop.hdfs.server.federation.store.records.QueryResult;
  */
 public abstract class StateStoreBaseImpl extends StateStoreDriver {
 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(StateStoreBaseImpl.class);
+
   @Override
   public <T extends BaseRecord> T get(
       Class<T> clazz, Query<T> query) throws IOException {
     List<T> records = getMultiple(clazz, query);
     if (records.size() > 1) {
-      throw new IOException("Found more than one object in collection");
+      LOG.error("We expected to get 1 record and found: " + records);
+      throw new IOException("Found more than one record when expecting 1");
     } else if (records.size() == 1) {
       return records.get(0);
     } else {

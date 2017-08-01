@@ -63,7 +63,7 @@ public class MountTableStoreImpl extends MountTableStore {
   public UpdateMountTableEntryResponse updateMountTableEntry(
       UpdateMountTableEntryRequest request) throws IOException {
     MountTable entry = request.getEntry();
-    boolean status = getDriver().put(entry, true, true);
+    boolean status = getDriver().put(entry, true, false);
     UpdateMountTableEntryResponse response =
         UpdateMountTableEntryResponse.newInstance();
     response.setStatus(status);

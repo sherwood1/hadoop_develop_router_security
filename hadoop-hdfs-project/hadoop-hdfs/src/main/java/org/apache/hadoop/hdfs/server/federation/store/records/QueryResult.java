@@ -53,4 +53,9 @@ public class QueryResult<T extends BaseRecord> {
   public long getTimestamp() {
     return this.timestamp;
   }
+
+  @Override
+  public String toString() {
+    return getRecords() + " @" + getTimestamp();
+  }
 }

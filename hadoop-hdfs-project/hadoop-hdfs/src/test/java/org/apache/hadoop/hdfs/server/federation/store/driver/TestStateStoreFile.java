@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Test the FileSystem (e.g., HDFS) implementation of the State Store driver.
+ * Test the local file implementation of the State Store driver.
  */
 public class TestStateStoreFile extends TestStateStoreDriverBase {
 
@@ -60,5 +60,17 @@ public class TestStateStoreFile extends TestStateStoreDriverBase {
   public void testDelete()
       throws IllegalArgumentException, IllegalAccessException, IOException {
     testRemove(getStateStoreDriver());
+  }
+
+  @Test
+  public void testFetchErrors()
+      throws IllegalArgumentException, IllegalAccessException, IOException {
+    testFetchErrors(getStateStoreDriver());
+  }
+
+  @Test
+  public void testMetrics()
+      throws IllegalArgumentException, IllegalAccessException, IOException {
+    testMetrics(getStateStoreDriver());
   }
 }
