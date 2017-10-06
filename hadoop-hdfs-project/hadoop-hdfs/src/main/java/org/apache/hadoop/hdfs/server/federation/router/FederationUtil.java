@@ -24,12 +24,16 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.server.federation.resolver.ActiveNamenodeResolver;
 import org.apache.hadoop.hdfs.server.federation.resolver.FileSubclusterResolver;
 import org.apache.hadoop.hdfs.server.federation.store.StateStoreService;
+import org.apache.hadoop.hdfs.web.URLConnectionFactory;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.VersionInfo;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -55,7 +59,8 @@ public final class FederationUtil {
    * @param webAddress Web address of the JMX endpoint.
    * @return JSON with the JMX data
    */
-  public static JSONArray getJmx(String beanQuery, String webAddress) {
+  public static JSONArray getJmx(String beanQuery, String webAddress,
+      Configuration conf) {
     JSONArray ret = null;
     BufferedReader reader = null;
     try {
@@ -66,8 +71,25 @@ public final class FederationUtil {
         host = webAddressSplit[0];
         port = Integer.parseInt(webAddressSplit[1]);
       }
-      URL jmxURL = new URL("http", host, port, "/jmx?qry=" + beanQuery);
-      URLConnection conn = jmxURL.openConnection();
+      final URL jmxURL = new URL("http", host, port, "/jmx?qry=" + beanQuery);
+
+      // Create a URL connection
+      final URLConnectionFactory connectionFactory =
+          URLConnectionFactory.newDefaultURLConnectionFactory(conf);
+      URLConnection conn = null;
+      if (UserGroupInformation.isSecurityEnabled()) {
+        // We need to create the connection using security
+        PrivilegedExceptionAction<URLConnection> action =
+            new PrivilegedExceptionAction<URLConnection>() {
+          @Override
+          public URLConnection run() throws Exception {
+            return connectionFactory.openConnection(jmxURL, true);
+          }
+        };
+        conn = UserGroupInformation.getCurrentUser().doAs(action);
+      } else {
+        conn = connectionFactory.openConnection(jmxURL);
+      }
       conn.setConnectTimeout(5 * 1000);
       conn.setReadTimeout(5 * 1000);
       InputStream in = conn.getInputStream();

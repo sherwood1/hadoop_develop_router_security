@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ha.HAServiceProtocol;
 import org.apache.hadoop.ha.HAServiceStatus;
+import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.NameNodeProxies;
@@ -75,8 +76,6 @@ public class NamenodeHeartbeatService extends PeriodicService {
   private final String nameserviceId;
   private final String namenodeId;
 
-  /** Namenode HA target. */
-  private NNHAServiceTarget localTarget;
   /** RPC address for the namenode. */
   private String rpcAddress;
   /** Service RPC address for the namenode. */
@@ -109,15 +108,7 @@ public class NamenodeHeartbeatService extends PeriodicService {
   protected void serviceInit(Configuration configuration) throws Exception {
 
     this.conf = configuration;
-
     String nnDesc = nameserviceId;
-    if (this.namenodeId != null && !this.namenodeId.isEmpty()) {
-      this.localTarget = new NNHAServiceTarget(
-          conf, nameserviceId, namenodeId);
-      nnDesc += "-" + namenodeId;
-    } else {
-      this.localTarget = null;
-    }
 
     // Get the RPC address for the clients to connect
     this.rpcAddress = getRpcAddress(conf, nameserviceId, namenodeId);
@@ -210,10 +201,6 @@ public class NamenodeHeartbeatService extends PeriodicService {
       // block and HA status available
       LOG.debug("Received service state: {} from HA namenode: {}",
           report.getState(), getNamenodeDesc());
-    } else if (localTarget == null) {
-      // block info available, HA status not expected
-      LOG.debug(
-          "Reporting non-HA namenode as operational: " + getNamenodeDesc());
     } else {
       // block info available, HA status should be available, but was not
       // fetched do nothing and let the current state stand
@@ -275,26 +262,6 @@ public class NamenodeHeartbeatService extends PeriodicService {
 
       // Read the stats from JMX (optional)
       updateJMXParameters(webAddress, report);
-
-      if (localTarget != null) {
-        // Try to get the HA status
-        try {
-          // Determine if NN is active
-          // TODO: dynamic timeout
-          HAServiceProtocol haProtocol = localTarget.getProxy(conf, 30*1000);
-          HAServiceStatus status = haProtocol.getServiceStatus();
-          report.setHAServiceState(status.getState());
-        } catch (Throwable e) {
-          if (e.getMessage().startsWith("HA for namenode is not enabled")) {
-            LOG.error("HA for {} is not enabled", getNamenodeDesc());
-            localTarget = null;
-          } else {
-            // Failed to fetch HA status, ignoring failure
-            LOG.error("Cannot fetch HA status for {}: {}",
-                getNamenodeDesc(), e.getMessage(), e);
-          }
-        }
-      }
     } catch(IOException e) {
       LOG.error("Cannot communicate with {}: {}",
           getNamenodeDesc(), e.getMessage());
@@ -328,7 +295,7 @@ public class NamenodeHeartbeatService extends PeriodicService {
     try {
       // TODO part of this should be moved to its own utility
       String query = "Hadoop:service=NameNode,name=FSNamesystem*";
-      JSONArray aux = FederationUtil.getJmx(query, address);
+      JSONArray aux = FederationUtil.getJmx(query, address, conf);
       if (aux != null) {
         for (int i = 0; i < aux.length(); i++) {
           JSONObject jsonObject = aux.getJSONObject(i);
@@ -351,6 +318,11 @@ public class NamenodeHeartbeatService extends PeriodicService {
                 jsonObject.getLong("PendingReplicationBlocks"),
                 jsonObject.getLong("UnderReplicatedBlocks"),
                 jsonObject.getLong("PendingDeletionBlocks"));
+            // Get HA state
+            String haState = jsonObject.getString("tag.HAState");
+            if (haState.equalsIgnoreCase("active")) {
+              report.setHAServiceState(HAServiceState.ACTIVE);
+            }
           }
         }
       }

@@ -63,6 +63,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.AddBlockFlag;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.HDFSPolicyProvider;
 import org.apache.hadoop.hdfs.inotify.EventBatchList;
 import org.apache.hadoop.hdfs.protocol.AddECPolicyResponse;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -96,13 +97,18 @@ import org.apache.hadoop.hdfs.protocol.ZoneReencryptionStatus;
 import org.apache.hadoop.hdfs.protocol.proto.ClientNamenodeProtocolProtos.ClientNamenodeProtocol;
 import org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolPB;
 import org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolServerSideTranslatorPB;
+import org.apache.hadoop.hdfs.protocolPB.NamenodeProtocolPB;
 import org.apache.hadoop.hdfs.security.token.block.DataEncryptionKey;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.server.federation.resolver.ActiveNamenodeResolver;
 import org.apache.hadoop.hdfs.server.federation.resolver.FederationNamespaceInfo;
 import org.apache.hadoop.hdfs.server.federation.resolver.FileSubclusterResolver;
+import org.apache.hadoop.hdfs.server.federation.resolver.MountTableResolver;
 import org.apache.hadoop.hdfs.server.federation.resolver.PathLocation;
 import org.apache.hadoop.hdfs.server.federation.resolver.RemoteLocation;
+import org.apache.hadoop.hdfs.server.federation.store.TokenStore;
+import org.apache.hadoop.hdfs.server.federation.store.records.FederatedToken;
+import org.apache.hadoop.hdfs.server.federation.store.records.MountTable;
 import org.apache.hadoop.hdfs.server.namenode.LeaseExpiredException;
 import org.apache.hadoop.hdfs.server.namenode.NameNode.OperationCategory;
 import org.apache.hadoop.hdfs.server.namenode.NotReplicatedYetException;
@@ -119,6 +125,7 @@ import org.apache.hadoop.net.NodeBase;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
@@ -170,6 +177,8 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
   /** Interface to map global name space to HDFS subcluster name spaces. */
   private final FileSubclusterResolver subclusterResolver;
 
+  /** If we are in safe mode, fail requests as if a standby NN. */
+  private volatile boolean safeMode;
 
   /** Category of the operation that a thread is executing. */
   private final ThreadLocal<OperationCategory> opCategory = new ThreadLocal<>();
@@ -243,6 +252,14 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
         .setQueueSizePerHandler(handlerQueueSize)
         .setVerbose(false)
         .build();
+
+    // set service-level authorization security policy
+    if (conf.getBoolean(
+        CommonConfigurationKeys.HADOOP_SECURITY_AUTHORIZATION, false)) {
+      // TODO set security enabled here
+      rpcServer.refreshServiceAcl(conf, new HDFSPolicyProvider());
+    }
+
     // We don't want the server to log the full stack trace for some exceptions
     this.rpcServer.addTerseExceptions(
         RemoteException.class,
@@ -268,7 +285,7 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
     this.rpcMonitor = ReflectionUtils.newInstance(rpcMonitorClass, conf);
 
     // Create the client
-    this.rpcClient = new RouterRpcClient(this.conf, this.router.getRouterId(),
+    this.rpcClient = new RouterRpcClient(this.conf, this.router,
         this.namenodeResolver, this.rpcMonitor);
   }
 
@@ -402,8 +419,24 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
   @Override // ClientProtocol
   public Token<DelegationTokenIdentifier> getDelegationToken(Text renewer)
       throws IOException {
-    checkOperation(OperationCategory.WRITE, false);
-    return null;
+    checkOperation(OperationCategory.WRITE);
+
+    // Get the tokens from each namespace
+    Map<FederationNamespaceInfo, Token<DelegationTokenIdentifier>> tokens =
+        getDelegationTokens(renewer);
+
+    // Store it in the federated token manager
+    String defaultNs = subclusterResolver.getDefaultNamespace();
+    Token<DelegationTokenIdentifier> defaultToken = tokens.get(defaultNs);
+    FederatedToken federatedToken =
+        FederatedToken.newInstance(router.getRouterId(), defaultToken);
+    federatedToken.setTokens(
+        (Map<FederationNamespaceInfo, Token<? extends TokenIdentifier>>)
+        (Map<FederationNamespaceInfo, ?>)tokens);
+    TokenStore tokenManager = router.getTokenManager();
+    tokenManager.addToken(federatedToken);
+
+    return (Token<DelegationTokenIdentifier>) federatedToken.getToken();
   }
 
   /**
@@ -421,14 +454,64 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
   @Override // ClientProtocol
   public long renewDelegationToken(Token<DelegationTokenIdentifier> token)
       throws IOException {
-    checkOperation(OperationCategory.WRITE, false);
-    return 0;
+    checkOperation(OperationCategory.WRITE);
+
+    // Check the State Store for the tokens in each ns
+    TokenStore tokenManager = router.getTokenManager();
+    Map<String, Token<? extends TokenIdentifier>> tokenMap =
+        tokenManager.getTokens(token);
+    Map<RemoteLocation, Token<? extends TokenIdentifier>> tokenLocMap =
+        new HashMap<RemoteLocation, Token<? extends TokenIdentifier>>();
+    for (Entry<String, Token<? extends TokenIdentifier>> entry :
+        tokenMap.entrySet()) {
+      String nsId = entry.getKey();
+      Token<? extends TokenIdentifier> nsToken = entry.getValue();
+      tokenLocMap.put(new RemoteLocation(nsId, "/"), nsToken);
+    }
+
+    // Renew the token in each namespace
+    RemoteMethod method = new RemoteMethod("renewDelegationToken",
+        new Class<?>[] {Token.class}, new RemoteParam(tokenLocMap));
+    Set<FederationNamespaceInfo> nss = namenodeResolver.getNamespaces();
+    Map<FederationNamespaceInfo, Object> results = rpcClient.invokeConcurrent(
+        nss, method, true, false);
+
+    // Merge the outputs by reporting the smallest expiration date
+    long ret = Long.MAX_VALUE;
+    for (Object result : results.values()) {
+      if (result instanceof Long) {
+        long longResult = (long)result;
+        if (longResult < ret) {
+          ret = longResult;
+        }
+      }
+    }
+    return ret;
   }
 
   @Override // ClientProtocol
   public void cancelDelegationToken(Token<DelegationTokenIdentifier> token)
       throws IOException {
-    checkOperation(OperationCategory.WRITE, false);
+    checkOperation(OperationCategory.WRITE);
+
+    // Check the State Store for the tokens in each ns
+    TokenStore tokenManager = router.getTokenManager();
+    Map<String, Token<? extends TokenIdentifier>> tokenMap =
+        tokenManager.getTokens(token);
+    Map<RemoteLocation, Token<? extends TokenIdentifier>> tokenLocMap =
+        new HashMap<RemoteLocation, Token<? extends TokenIdentifier>>();
+    for (Entry<String, Token<? extends TokenIdentifier>> entry :
+        tokenMap.entrySet()) {
+      String nsId = entry.getKey();
+      Token<? extends TokenIdentifier> nsToken = entry.getValue();
+      tokenLocMap.put(new RemoteLocation(nsId, "/"), nsToken);
+    }
+
+    // Cancel the token in each namespace
+    RemoteMethod method = new RemoteMethod("cancelDelegationToken",
+        new Class<?>[] {Token.class}, new RemoteParam(tokenLocMap));
+    Set<FederationNamespaceInfo> nss = namenodeResolver.getNamespaces();
+    rpcClient.invokeConcurrent(nss, method, true, false);
   }
 
   @Override // ClientProtocol
@@ -1966,6 +2049,19 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
       throw ioe;
     }
   }
+
+  /**
+   * Check if the path is locked.
+   *
+   * @param path Path to check.
+   * @return If the path is locked.
+   * @throws IOException If the State Store is not available.
+   */
+  /* the following code contains security support for the class PathLockStore
+  private boolean isPathLocked(final String path) throws IOException {
+     pathLockStore = router.getPathLockManager();
+    return pathLockStore != null && pathLockStore.isLocked(path);
+  }*/
 
   /**
    * Get the modification dates for mount points.

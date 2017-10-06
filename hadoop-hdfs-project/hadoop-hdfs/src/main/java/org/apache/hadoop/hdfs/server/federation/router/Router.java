@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.hdfs.server.federation.router;
 
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ROUTER_KERBEROS_PRINCIPAL_KEY;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_ROUTER_KEYTAB_FILE_KEY;
 import static org.apache.hadoop.hdfs.server.federation.router.FederationUtil.newActiveNamenodeResolver;
 import static org.apache.hadoop.hdfs.server.federation.router.FederationUtil.newFileSubclusterResolver;
 import static org.apache.hadoop.util.ExitUtil.terminate;
@@ -40,8 +42,11 @@ import org.apache.hadoop.hdfs.server.federation.metrics.FederationMetrics;
 import org.apache.hadoop.hdfs.server.federation.resolver.ActiveNamenodeResolver;
 import org.apache.hadoop.hdfs.server.federation.resolver.FileSubclusterResolver;
 import org.apache.hadoop.hdfs.server.federation.store.StateStoreService;
+import org.apache.hadoop.hdfs.server.federation.store.TokenStore;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.source.JvmMetrics;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.service.CompositeService;
 import org.apache.hadoop.util.JvmPauseMonitor;
 import org.apache.hadoop.util.ShutdownHookManager;
@@ -95,6 +100,9 @@ public class Router extends CompositeService {
   /** Interface to map global name space to HDFS subcluster name spaces. */
   private FileSubclusterResolver subclusterResolver;
 
+  /** Store for the federated tokens. */
+  private TokenStore tokenManager;
+
   /** Interface to identify the active NN for a nameservice or blockpool ID. */
   private ActiveNamenodeResolver namenodeResolver;
   /** Updates the namenode status in the namenode resolver. */
@@ -130,6 +138,12 @@ public class Router extends CompositeService {
   protected void serviceInit(Configuration configuration) throws Exception {
     this.conf = configuration;
 
+    // Enable the security for the Router
+    UserGroupInformation.setConfiguration(conf);
+    String hostname = InetAddress.getLocalHost().getHostName();
+    SecurityUtil.login(conf, DFS_ROUTER_KEYTAB_FILE_KEY,
+        DFS_ROUTER_KERBEROS_PRINCIPAL_KEY, hostname);
+
     if (conf.getBoolean(
         DFSConfigKeys.DFS_ROUTER_STORE_ENABLE,
         DFSConfigKeys.DFS_ROUTER_STORE_ENABLE_DEFAULT)) {
@@ -157,7 +171,7 @@ public class Router extends CompositeService {
       // Create RPC server
       this.rpcServer = createRpcServer();
       addService(this.rpcServer);
-      this.setRpcServerAddress(rpcServer.getRpcAddress());
+      this.setRpcServerAddress(this.rpcServer.getRpcAddress());
     }
 
     if (conf.getBoolean(
@@ -501,6 +515,19 @@ public class Router extends CompositeService {
   /////////////////////////////////////////////////////////
   // Router info
   /////////////////////////////////////////////////////////
+
+  /**
+   * Get the state store interface for the federated tokens.
+   *
+   * @return FederationTokenStateStore state store API handle.
+   */
+  public TokenStore getTokenManager() {
+    if (this.tokenManager == null && this.stateStore != null) {
+      this.tokenManager = this.stateStore.getRegisteredRecordStore(
+          TokenStore.class);
+    }
+    return this.tokenManager;
+  }
 
   /**
    * Unique ID for the router, typically the hostname:port string for the
