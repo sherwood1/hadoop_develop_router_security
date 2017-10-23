@@ -103,7 +103,7 @@ public class Router extends CompositeService {
   /** Store for the federated tokens. */
   private TokenStore tokenManager;
 
-  /** Interface to identify the active NN for a nameservice or blockpool ID. */
+  /** Interface to identify the activeInvalidProtocolBufferException.java NN for a nameservice or blockpool ID. */
   private ActiveNamenodeResolver namenodeResolver;
   /** Updates the namenode status in the namenode resolver. */
   private Collection<NamenodeHeartbeatService> namenodeHearbeatServices;
@@ -149,6 +149,7 @@ public class Router extends CompositeService {
         DFSConfigKeys.DFS_ROUTER_STORE_ENABLE_DEFAULT)) {
       // Service that maintains the State Store connection
       this.stateStore = new StateStoreService();
+      LOG.info("sherwood: statestore is :" + this.stateStore);
       addService(this.stateStore);
     }
 

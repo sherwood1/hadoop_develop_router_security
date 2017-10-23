@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+
 /**
  * A client proxy for Router -> NN communication using the NN ClientProtocol.
  * <p>
@@ -112,11 +113,11 @@ public class RouterRpcClient {
   private static final Pattern STACK_TRACE_PATTERN =
       Pattern.compile("\\tat (.*)\\.(.*)\\((.*):(\\d*)\\)");
 
-
   /**
    * Create a router RPC client to manage remote procedure calls to NNs.
    *
    * @param conf Hdfs Configuation.
+   * @param router the router
    * @param resolver A NN resolver to determine the currently active NN in HA.
    * @param monitor Optional performance monitor.
    */
@@ -229,6 +230,8 @@ public class RouterRpcClient {
       String rpcAddress)
           throws IOException {
     ConnectionContext connection = null;
+    LOG.info("sherwood is testing info");
+    LOG.debug("Sherwood is testing debug");
     try {
       // Each proxy holds the UGI info for the current user when it is created.
       // This cache does not scale very well, one entry per user per namenode,
@@ -240,6 +243,7 @@ public class RouterRpcClient {
       Collection<Token<? extends TokenIdentifier>> tokens = ugi.getTokens();
       if (tokens != null && !tokens.isEmpty()) {
         TokenStore tokenManager = router.getTokenManager();
+        LOG.info("token managere is :" + tokenManager);
         for (Token<? extends TokenIdentifier> token : tokens) {
           // If this is a federated token, add the one for each subcluster
           Map<String, Token<? extends TokenIdentifier>> federatedTokens =
@@ -252,9 +256,24 @@ public class RouterRpcClient {
             }
           }
         }
+        LOG.info("sherwood: user has a federated token");
+      } else {
+        LOG.info("sherwood: token is null or emptye");
       }
-      connection = this.connectionManager.getConnection(ugi, rpcAddress);
-      LOG.debug("User {} NN {} is using connection {}",
+
+      LOG.info("sherwood: authenticationMethod " + ugi.getAuthenticationMethod());
+      LOG.info("sherwood: real authenticationMethod " + ugi.getRealAuthenticationMethod());
+      LOG.info("sherwood: 11111try toget realuser" + ugi.getRealUser());
+      //LOG.info("sherwood: getRealUser " + ugi.getRealUser().getUserName());
+      ugi.checkTGTAndReloginFromKeytab();
+
+      UserGroupInformation.getCurrentUser();
+      UserGroupInformation routerUser = UserGroupInformation.getLoginUser();
+      UserGroupInformation routerProxyingAsClient = UserGroupInformation.createProxyUser(ugi.getUserName(), routerUser);
+
+
+      connection = this.connectionManager.getConnection(routerProxyingAsClient, rpcAddress);
+      LOG.info("User {} NN {} is using connection {}",
           ugi.getUserName(), rpcAddress, connection);
     } catch (Exception ex) {
       LOG.error("Cannot open NN client to address: {}", rpcAddress, ex);
@@ -606,7 +625,7 @@ public class RouterRpcClient {
    * @param block Block used to determine appropriate nameservice.
    * @param method The remote method and parameters to invoke.
    * @return The result of invoking the method.
-   * @throws IOException
+   * @throws IOException the io exception
    */
   public Object invokeSingle(final ExtendedBlock block, RemoteMethod method)
       throws IOException {
@@ -624,7 +643,7 @@ public class RouterRpcClient {
    * @param bpId Block pool identifier.
    * @param method The remote method and parameters to invoke.
    * @return The result of invoking the method.
-   * @throws IOException
+   * @throws IOException the io exception
    */
   public Object invokeSingleBlockPool(final String bpId, RemoteMethod method)
       throws IOException {
@@ -641,7 +660,7 @@ public class RouterRpcClient {
    * @param nsId Target namespace for the method.
    * @param method The remote method and parameters to invoke.
    * @return The result of invoking the method.
-   * @throws IOException
+   * @throws IOException the io exception
    */
   public Object invokeSingle(final String nsId, RemoteMethod method)
       throws IOException {
@@ -661,7 +680,7 @@ public class RouterRpcClient {
    * @param location RemoteLocation to invoke.
    * @param remoteMethod The remote method and parameters to invoke.
    * @return The result of invoking the method if successful.
-   * @throws IOException
+   * @throws IOException the io exception
    */
   public Object invokeSingle(final RemoteLocationContext location,
       RemoteMethod remoteMethod) throws IOException {
@@ -675,10 +694,8 @@ public class RouterRpcClient {
    *
    * @param locations List of locations/nameservices to call concurrently.
    * @param remoteMethod The remote method and parameters to invoke.
-   * @return The result of the first successful call, or if no calls are
-   *         successful, the result of the last RPC call executed.
-   * @throws IOException if the success condition is not met and one of the RPC
-   *           calls generated a remote exception.
+   * @return The result of the first successful call, or if no calls are         successful, the result of the last RPC call executed.
+   * @throws IOException if the success condition is not met and one of the RPC           calls generated a remote exception.
    */
   public Object invokeSequential(
       final List<? extends RemoteLocationContext> locations,
@@ -702,14 +719,10 @@ public class RouterRpcClient {
    *
    * @param locations List of locations/nameservices to call concurrently.
    * @param remoteMethod The remote method and parameters to invoke.
-   * @param expectedResultClass In order to be considered a positive result, the
-   *          return type must be of this class.
-   * @param expectedResultValue In order to be considered a positive result, the
-   *          return value must equal the value of this object.
-   * @return The result of the first successful call, or if no calls are
-   *         successful, the result of the first RPC call executed.
-   * @throws IOException if the success condition is not met, return the first
-   *                     remote exception generated.
+   * @param expectedResultClass In order to be considered a positive result, the          return type must be of this class.
+   * @param expectedResultValue In order to be considered a positive result, the          return value must equal the value of this object.
+   * @return The result of the first successful call, or if no calls are         successful, the result of the first RPC call executed.
+   * @throws IOException if the success condition is not met, return the first                     remote exception generated.
    */
   public Object invokeSequential(
       final List<? extends RemoteLocationContext> locations,
@@ -809,15 +822,13 @@ public class RouterRpcClient {
    * Re-throws exceptions generated by the remote RPC call as either
    * RemoteException or IOException.
    *
+   * @param <T>  the type parameter
    * @param locations List of remote locations to call concurrently.
-   * @param remoteMethod The remote method and parameters to invoke.
-   * @param requireResponse If true an exception will be thrown if all calls do
-   *          not complete. If false exceptions are ignored and all data results
-   *          successfully received are returned.
+   * @param method the method
+   * @param requireResponse If true an exception will be thrown if all calls do          not complete. If false exceptions are ignored and all data results          successfully received are returned.
    * @param standby If the requests should go to the standby namenodes too.
    * @return Result of invoking the method per subcluster: nsId -> result.
-   * @throws IOException If requiredResponse=true and any of the calls throw an
-   *           exception.
+   * @throws IOException If requiredResponse=true and any of the calls throw an           exception.
    */
   @SuppressWarnings("unchecked")
   public <T extends RemoteLocationContext> Map<T, Object> invokeConcurrent(
