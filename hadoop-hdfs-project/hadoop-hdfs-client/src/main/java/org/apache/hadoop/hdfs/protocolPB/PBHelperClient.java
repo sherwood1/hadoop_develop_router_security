@@ -2060,7 +2060,7 @@ public class PBHelperClient {
 
   public static FsServerDefaultsProto convert(FsServerDefaults fs) {
     if (fs == null) return null;
-    return FsServerDefaultsProto.newBuilder().
+    FsServerDefaultsProto.Builder builder = FsServerDefaultsProto.newBuilder().
         setBlockSize(fs.getBlockSize()).
         setBytesPerChecksum(fs.getBytesPerChecksum()).
         setWritePacketSize(fs.getWritePacketSize())
@@ -2069,9 +2069,11 @@ public class PBHelperClient {
         .setEncryptDataTransfer(fs.getEncryptDataTransfer())
         .setTrashInterval(fs.getTrashInterval())
         .setChecksumType(convert(fs.getChecksumType()))
-        .setKeyProviderUri(fs.getKeyProviderUri())
-        .setPolicyId(fs.getDefaultStoragePolicyId())
-        .build();
+        .setPolicyId(fs.getDefaultStoragePolicyId());
+    if (fs.getKeyProviderUri() != null) {
+      builder.setKeyProviderUri(fs.getKeyProviderUri());
+    }
+    return builder.build();
   }
 
   public static EnumSetWritable<CreateFlag> convertCreateFlag(int flag) {
