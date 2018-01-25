@@ -197,6 +197,9 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ChunkedArrayList;
 import org.apache.hadoop.util.DataChecksum;
 import org.apache.hadoop.util.LimitInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Utilities for converting protobuf classes to and from hdfs-client side
@@ -208,6 +211,8 @@ import org.apache.hadoop.util.LimitInputStream;
  * being null must be done before calling the convert() method.
  */
 public class PBHelperClient {
+  private static final Logger LOG = LoggerFactory.getLogger(PBHelperClient.class);
+
   private static final XAttr.NameSpace[] XATTR_NAMESPACE_VALUES =
       XAttr.NameSpace.values();
   private static final AclEntryType[] ACL_ENTRY_TYPE_VALUES =
@@ -249,6 +254,12 @@ public class PBHelperClient {
   }
 
   public static TokenProto convert(Token<?> tok) {
+
+    if (tok == null || tok.getIdentifier() == null) {
+      LOG.info("token is +2" + tok);
+      LOG.info("======sherwood zheng2------" + tok.getIdentifier());
+      LOG.info(Thread.currentThread().getStackTrace().toString());
+    }
     return TokenProto.newBuilder().
         setIdentifier(getByteString(tok.getIdentifier())).
         setPassword(getByteString(tok.getPassword())).

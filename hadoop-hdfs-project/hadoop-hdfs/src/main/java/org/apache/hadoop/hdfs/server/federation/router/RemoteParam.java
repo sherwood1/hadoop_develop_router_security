@@ -18,6 +18,10 @@
 package org.apache.hadoop.hdfs.server.federation.router;
 
 import java.util.Map;
+import org.apache.hadoop.hdfs.server.federation.resolver.RemoteLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * A dynamically assignable parameter that is location-specific.
@@ -32,6 +36,7 @@ import java.util.Map;
 public class RemoteParam {
 
   private final Map<? extends Object, ? extends Object> paramMap;
+  private static final Logger LOG = LoggerFactory.getLogger(RemoteParam.class);
 
   /**
    * Constructs a default remote parameter. Always maps the value to the
@@ -62,6 +67,20 @@ public class RemoteParam {
     if (context == null) {
       return null;
     } else if (this.paramMap != null) {
+      LOG.info("sherwood: get result is from getParameterForContext :" + this.paramMap.get(context));
+      LOG.info("sherwood: printing the map");
+      for (Map.Entry<? extends Object, ? extends Object> enry: this.paramMap.entrySet()) {
+        RemoteLocation rm = (RemoteLocation)enry.getKey();
+        LOG.info("sherwood:" + rm);
+        if(rm.getNameserviceId().equals(context.getNameserviceId())) {
+          LOG.info("ns id they are equal");
+          if (rm.equals(context)) {
+            LOG.info("they acutally equal");
+          }
+        }
+      }
+      LOG.info("sherwood: end printing the map");
+      LOG.info("to compare with the current location:" + context);
       return this.paramMap.get(context);
     } else {
       // Default case

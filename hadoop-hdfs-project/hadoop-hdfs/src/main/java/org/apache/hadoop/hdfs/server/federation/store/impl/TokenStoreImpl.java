@@ -1,6 +1,7 @@
 package org.apache.hadoop.hdfs.server.federation.store.impl;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -46,16 +47,27 @@ public class TokenStoreImpl extends TokenStore {
     this.tokens = new HashMap<>();
   }
 
+  private void printTokens(){
+    LOG.info("token size is:" + tokens.keySet().size());
+    LOG.info("strat printing token ---------------");
+    for (Token<? extends TokenIdentifier> token: tokens.keySet()){
+      LOG.info(token.toString());
+    }
+    LOG.info("end printing token ---------------");
+  }
+
   @Override
   public boolean addToken(FederatedToken token) throws IOException {
-    LOG.info("Adding token {} to the store with {} tokens",
+    LOG.info("-------------Adding token {} to the store with {} tokens",
         token.getToken(), this.tokens.size());
+
     cacheWriteLock.lock();
     try {
       this.tokens.put(token.getToken(), token);
     } finally {
       cacheWriteLock.unlock();
     }
+    LOG.info("add token finished");
     return getDriver().put(token, true, false);
   }
 
@@ -68,14 +80,37 @@ public class TokenStoreImpl extends TokenStore {
   public Map<String, Token<? extends TokenIdentifier>> getTokens(
       Token<? extends TokenIdentifier> token) throws IOException {
 
+    LOG.info("--------------getToken start");
+
+    //printTokens();
+    LOG.info("provide a token: " + token.toString());
+
     // Get the token from the local cache
     Map<String, Token<? extends TokenIdentifier>> ret = null;
     cacheReadLock.lock();
     try {
-      FederatedToken federatedToken = this.tokens.get(token);
+      FederatedToken federatedToken = null; // = this.tokens.get(token);
+      for(Token<? extends TokenIdentifier> m: tokens.keySet()) {
+        if (Arrays.equals(m.identifier, token.identifier)) {
+          federatedToken = this.tokens.get(m);
+        }
+      }
+//      LOG.info("start compare -------------");
+//      for(Token<? extends TokenIdentifier> m: tokens.keySet()){
+//        LOG.info("iteration ith");
+//        LOG.info(m.toString());
+//        LOG.info(((Boolean)(Arrays.equals(m.identifier, token.identifier))).toString());
+//        LOG.info(((Boolean)(Arrays.equals(m.password, token.password))).toString());
+//        LOG.info(((Boolean)(m.kind.equals(token.kind))).toString());
+//        LOG.info(((Boolean)(m.service.equals(token.service))).toString());
+//      }
+//
+//      LOG.info("end compare--------------");
+      LOG.info("sherwood:------ federatedToken is null? " + federatedToken);
       if (federatedToken != null) {
         Map<String, Token<? extends TokenIdentifier>> federatedTokens =
             federatedToken.getTokens();
+        LOG.info("sherwood:------ federatedTokens size is? " + federatedTokens.size());
         ret = new HashMap<String, Token<? extends TokenIdentifier>>(
             federatedTokens);
       }

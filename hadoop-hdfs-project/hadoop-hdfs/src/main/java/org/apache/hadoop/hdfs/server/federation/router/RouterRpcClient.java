@@ -852,10 +852,14 @@ public class RouterRpcClient {
     List<T> orderedLocations = new LinkedList<>();
     Set<Callable<Object>> callables = new HashSet<>();
     for (final T location : locations) {
+      LOG.info("sherwood: looking up the location at:" + location);
       String nsId = location.getNameserviceId();
+      LOG.info("sherwood: nsId from the location is : " + nsId);
       final List<? extends FederationNamenodeContext> namenodes =
           getNamenodesForNameservice(nsId);
       final Object[] paramList = method.getParams(location);
+      LOG.info("sherwood: the parameterlist size is " + paramList.length);
+      LOG.info("sherwood: printing the first ele in parameterlist1234" + paramList[0]);
       if (standby) {
         // Call the objectGetter to all NNs (including standby)
         for (final FederationNamenodeContext nn : namenodes) {
@@ -876,6 +880,8 @@ public class RouterRpcClient {
       } else {
         // Call the objectGetter in order of nameservices in the NS list
         orderedLocations.add(location);
+        LOG.info("send reqeust to 1234: " + location);
+        LOG.info("paramList 1234:" + paramList[0]);
         callables.add(new Callable<Object>() {
           public Object call() throws Exception {
             return invokeMethod(ugi, namenodes, m, paramList);

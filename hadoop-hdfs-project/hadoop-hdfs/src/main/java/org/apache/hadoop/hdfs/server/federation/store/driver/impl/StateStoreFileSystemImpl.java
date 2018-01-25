@@ -148,14 +148,16 @@ public class StateStoreFileSystemImpl extends StateStoreFileBaseImpl {
   protected <T extends BaseRecord> BufferedWriter getWriter(String pathName) {
     BufferedWriter writer = null;
     Path path = new Path(pathName);
+    FSDataOutputStream fdos = null;
     try {
-      FSDataOutputStream fdos = fs.create(path, true);
+      fdos = fs.create(path, true);
       OutputStreamWriter osw =
           new OutputStreamWriter(fdos, StandardCharsets.UTF_8);
       writer = new BufferedWriter(osw);
     } catch (IOException ex) {
-      LOG.error("Cannot open write stream for {}", path);
+      LOG.error("Cannot open write stream for {} {}", path, ex);
     }
+
     return writer;
   }
 

@@ -316,6 +316,18 @@ public abstract class StateStoreFileBaseImpl
       Class<? extends BaseRecord> recordClass = record.getClass();
       String path = getPathForClass(recordClass);
       String primaryKey = getPrimaryKey(record);
+//      String[] primaryKeyParts = primaryKey.split(",");
+//      StringBuilder primaryKeyNew = new StringBuilder();
+//      for (int i = 0; i < primaryKeyParts.length; i++) {
+//        if (i == primaryKeyParts.length - 1 || i < primaryKeyParts.length - 5) {
+//          if (i != 0) {
+//            primaryKeyNew.append(",");
+//          }
+//          primaryKeyNew.append(primaryKeyParts[i]);
+//        }
+//      }
+
+      LOG.info("##############primary key is :" + primaryKey);
       String recordPath = path + "/" + primaryKey;
 
       if (exists(recordPath)) {

@@ -148,14 +148,17 @@ public class RemoteMethod {
     if (this.params == null) {
       return new Object[] {};
     }
+    LOG.info("sherwood: the size of this.params is :"+ this.params.length);
     Object[] objList = new Object[this.params.length];
     for (int i = 0; i < this.params.length; i++) {
       Object currentObj = this.params[i];
       if (currentObj instanceof RemoteParam) {
+        LOG.info("is instance of this remoteParam");
         // Map the parameter using the context
         RemoteParam paramGetter = (RemoteParam) currentObj;
         objList[i] = paramGetter.getParameterForContext(context);
       } else {
+        LOG.info("is not instance of this remoteParam");
         objList[i] = currentObj;
       }
     }

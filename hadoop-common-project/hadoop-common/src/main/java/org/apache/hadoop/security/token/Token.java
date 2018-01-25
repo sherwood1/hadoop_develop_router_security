@@ -48,11 +48,11 @@ public class Token<T extends TokenIdentifier> implements Writable {
 
   private static Map<Text, Class<? extends TokenIdentifier>> tokenKindMap;
 
-  private byte[] identifier;
-  private byte[] password;
-  private Text kind;
-  private Text service;
-  private TokenRenewer renewer;
+  public byte[] identifier;
+  public byte[] password;
+  public Text kind;
+  public Text service;
+  public TokenRenewer renewer;
 
   /**
    * Construct a token given a token identifier and a secret manager for the

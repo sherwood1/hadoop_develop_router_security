@@ -71,7 +71,7 @@ public class TestHAStateTransitions {
     "Hello state transitioning world";
   private static final StateChangeRequestInfo REQ_INFO = new StateChangeRequestInfo(
       RequestSource.REQUEST_BY_USER_FORCED);
-  
+
   static {
     GenericTestUtils.setLogLevel(EditLogTailer.LOG, Level.ALL);
   }
@@ -92,7 +92,7 @@ public class TestHAStateTransitions {
       cluster.waitActive();
       cluster.transitionToActive(0);
       FileSystem fs = cluster.getFileSystem(0);
-      
+
       fs.mkdirs(TEST_DIR);
       cluster.transitionToStandby(0);
       try {
@@ -103,18 +103,18 @@ public class TestHAStateTransitions {
             "Operation category WRITE is not supported", t);
       }
       cluster.transitionToActive(0);
-      
+
       // Create a file, then delete the whole directory recursively.
       DFSTestUtil.createFile(fs, new Path(TEST_DIR, "foo"),
           10, (short)1, 1L);
       fs.delete(TEST_DIR, true);
-      
+
       // Now if the standby tries to replay the last segment that it just
       // wrote as active, it would fail since it's trying to create a file
       // in a non-existent directory.
       cluster.transitionToStandby(0);
       cluster.transitionToActive(0);
-      
+
       assertFalse(fs.exists(TEST_DIR));
 
     } finally {
@@ -173,12 +173,12 @@ public class TestHAStateTransitions {
    * @param nsIndex namespace index starting from zero
    * @throws Exception
    */
-  private void testManualFailoverFailback(MiniDFSCluster cluster, 
+  private void testManualFailoverFailback(MiniDFSCluster cluster,
 		  Configuration conf, int nsIndex) throws Exception {
       int nn0 = 2 * nsIndex, nn1 = 2 * nsIndex + 1;
 
       cluster.transitionToActive(nn0);
-      
+
       LOG.info("Starting with NN 0 active in namespace " + nsIndex);
       FileSystem fs = HATestUtil.configureFailoverFs(cluster, conf);
       fs.mkdirs(TEST_DIR);
@@ -193,7 +193,7 @@ public class TestHAStateTransitions {
       cluster.transitionToStandby(nn1);
       cluster.transitionToActive(nn0);
       assertTrue(fs.exists(TEST_DIR));
-      assertEquals(TEST_FILE_DATA, 
+      assertEquals(TEST_FILE_DATA,
           DFSTestUtil.readFile(fs, TEST_FILE_PATH));
 
       LOG.info("Removing test file");
@@ -205,7 +205,7 @@ public class TestHAStateTransitions {
       cluster.transitionToActive(nn1);
       assertFalse(fs.exists(TEST_DIR));
   }
-  
+
   /**
    * Tests manual failover back and forth between two NameNodes.
    */
@@ -224,7 +224,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * Regression test for HDFS-2693: when doing state transitions, we need to
    * lock the FSNamesystem so that we don't end up doing any writes while it's
@@ -245,10 +245,10 @@ public class TestHAStateTransitions {
           cluster.getNameNode(0).getNamesystem());
       Mockito.doAnswer(new GenericTestUtils.SleepAnswer(50))
         .when(spyLock).writeLock();
-      
+
       final FileSystem fs = HATestUtil.configureFailoverFs(
           cluster, conf);
-      
+
       TestContext ctx = new TestContext();
       for (int i = 0; i < 50; i++) {
         final int finalI = i;
@@ -261,7 +261,7 @@ public class TestHAStateTransitions {
           }
         });
       }
-      
+
       ctx.addThread(new RepeatingTestThread(ctx) {
         @Override
         public void doAnAction() throws Exception {
@@ -277,7 +277,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * Test for HDFS-2812. Since lease renewals go from the client
    * only to the active NN, the SBN will have out-of-date lease
@@ -301,7 +301,7 @@ public class TestHAStateTransitions {
     try {
       cluster.waitActive();
       cluster.transitionToActive(0);
-      
+
       LOG.info("Starting with NN 0 active");
 
       stm = fs.create(TEST_FILE_PATH);
@@ -310,16 +310,16 @@ public class TestHAStateTransitions {
       long nn1t0 = NameNodeAdapter.getLeaseRenewalTime(nn1, TEST_FILE_STR);
       assertEquals("Lease should not yet exist on nn1",
           -1, nn1t0);
-      
+
       Thread.sleep(5); // make sure time advances!
 
       HATestUtil.waitForStandbyToCatchUp(nn0, nn1);
       long nn1t1 = NameNodeAdapter.getLeaseRenewalTime(nn1, TEST_FILE_STR);
       assertTrue("Lease should have been created on standby. Time was: " +
           nn1t1, nn1t1 > nn0t0);
-          
+
       Thread.sleep(5); // make sure time advances!
-      
+
       LOG.info("Failing over to NN 1");
       cluster.transitionToStandby(0);
       cluster.transitionToActive(1);
@@ -331,7 +331,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * Test that delegation tokens continue to work after the failover.
    */
@@ -340,7 +340,7 @@ public class TestHAStateTransitions {
     Configuration conf = new Configuration();
     conf.setBoolean(
         DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY, true);
-    
+
     MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .nnTopology(MiniDFSNNTopology.simpleHATopology())
         .numDataNodes(0)
@@ -367,7 +367,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * Tests manual failover back and forth between two NameNodes
    * for federation cluster with two namespaces.
@@ -381,12 +381,12 @@ public class TestHAStateTransitions {
       .build();
     try {
       cluster.waitActive();
-   
+
       // test for namespace 0
       testManualFailoverFailback(cluster, conf, 0);
-      
+
       // test for namespace 1
-      testManualFailoverFailback(cluster, conf, 1); 
+      testManualFailoverFailback(cluster, conf, 1);
     } finally {
       cluster.shutdown();
     }
@@ -402,7 +402,7 @@ public class TestHAStateTransitions {
       throws Exception {
     testFailoverAfterCrashDuringLogRoll(true);
   }
-  
+
   private static void testFailoverAfterCrashDuringLogRoll(boolean writeHeader)
       throws Exception {
     Configuration conf = new Configuration();
@@ -424,7 +424,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   private static void createEmptyInProgressEditLog(MiniDFSCluster cluster,
       NameNode nn, boolean writeHeader) throws IOException {
     long txid = nn.getNamesystem().getEditLog().getLastWrittenTxId();
@@ -435,7 +435,7 @@ public class TestHAStateTransitions {
         txid + 1);
     assertTrue("Failed to create in-progress edits file",
         inProgressFile.createNewFile());
-    
+
     if (writeHeader) {
       DataOutputStream out = new DataOutputStream(new FileOutputStream(
           inProgressFile));
@@ -444,7 +444,7 @@ public class TestHAStateTransitions {
       out.close();
     }
   }
-  
+
 
   /**
    * The secret manager needs to start/stop - the invariant should be that
@@ -453,7 +453,7 @@ public class TestHAStateTransitions {
    * transitions to make sure the secret manager is started when we transition
    * into state 4, but none of the others.
    * <pre>
-   *         SafeMode     Not SafeMode 
+   *         SafeMode     Not SafeMode
    * Standby   1 <------> 2
    *           ^          ^
    *           |          |
@@ -478,61 +478,61 @@ public class TestHAStateTransitions {
       cluster.transitionToActive(0);
       DFSTestUtil.createFile(cluster.getFileSystem(0),
           TEST_FILE_PATH, 6000, (short)1, 1L);
-      
+
       cluster.getConfiguration(0).setInt(
           DFSConfigKeys.DFS_NAMENODE_SAFEMODE_EXTENSION_KEY, 60000);
 
       cluster.restartNameNode(0);
       NameNode nn = cluster.getNameNode(0);
-      
+
       banner("Started in state 1.");
       assertTrue(nn.isStandbyState());
       assertTrue(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-      
+
       banner("Transition 1->2. Should not start secret manager");
       NameNodeAdapter.leaveSafeMode(nn);
       assertTrue(nn.isStandbyState());
       assertFalse(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-  
+
       banner("Transition 2->1. Should not start secret manager.");
       NameNodeAdapter.enterSafeMode(nn, false);
       assertTrue(nn.isStandbyState());
       assertTrue(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-  
+
       banner("Transition 1->3. Should not start secret manager.");
       nn.getRpcServer().transitionToActive(REQ_INFO);
       assertFalse(nn.isStandbyState());
       assertTrue(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-  
+
       banner("Transition 3->1. Should not start secret manager.");
       nn.getRpcServer().transitionToStandby(REQ_INFO);
       assertTrue(nn.isStandbyState());
       assertTrue(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-  
+
       banner("Transition 1->3->4. Should start secret manager.");
       nn.getRpcServer().transitionToActive(REQ_INFO);
       NameNodeAdapter.leaveSafeMode(nn);
       assertFalse(nn.isStandbyState());
       assertFalse(nn.isInSafeMode());
       assertTrue(isDTRunning(nn));
-      
+
       banner("Transition 4->3. Should stop secret manager");
       NameNodeAdapter.enterSafeMode(nn, false);
       assertFalse(nn.isStandbyState());
       assertTrue(nn.isInSafeMode());
       assertFalse(isDTRunning(nn));
-  
+
       banner("Transition 3->4. Should start secret manager");
       NameNodeAdapter.leaveSafeMode(nn);
       assertFalse(nn.isStandbyState());
       assertFalse(nn.isInSafeMode());
       assertTrue(isDTRunning(nn));
-      
+
       for (int i = 0; i < 20; i++) {
         // Loop the last check to suss out races.
         banner("Transition 4->2. Should stop secret manager.");
@@ -540,7 +540,7 @@ public class TestHAStateTransitions {
         assertTrue(nn.isStandbyState());
         assertFalse(nn.isInSafeMode());
         assertFalse(isDTRunning(nn));
-    
+
         banner("Transition 2->4. Should start secret manager");
         nn.getRpcServer().transitionToActive(REQ_INFO);
         assertFalse(nn.isStandbyState());
@@ -551,7 +551,7 @@ public class TestHAStateTransitions {
       cluster.shutdown();
     }
   }
-  
+
   /**
    * This test also serves to test
    * {@link HAUtil#getProxiesForAllNameNodesInNameservice(Configuration, String)} and
@@ -568,13 +568,13 @@ public class TestHAStateTransitions {
     try {
       Configuration conf = new HdfsConfiguration();
       HATestUtil.setFailoverConfigurations(cluster, conf);
-      
+
       List<ClientProtocol> namenodes =
           HAUtil.getProxiesForAllNameNodesInNameservice(conf,
               HATestUtil.getLogicalHostname(cluster));
-      
+
       assertEquals(2, namenodes.size());
-      
+
       assertFalse(HAUtil.isAtLeastOneActive(namenodes));
       cluster.transitionToActive(0);
       assertTrue(HAUtil.isAtLeastOneActive(namenodes));
@@ -590,7 +590,7 @@ public class TestHAStateTransitions {
       }
     }
   }
-  
+
   private boolean isDTRunning(NameNode nn) {
     return NameNodeAdapter.getDtSecretManager(nn.getNamesystem()).isRunning();
   }

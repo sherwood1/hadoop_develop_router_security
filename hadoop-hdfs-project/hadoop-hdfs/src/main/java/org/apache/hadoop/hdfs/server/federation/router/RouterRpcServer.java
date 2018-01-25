@@ -428,16 +428,34 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
     Map<FederationNamespaceInfo, Token<DelegationTokenIdentifier>> tokens =
         getDelegationTokens(renewer);
 
+    // add the router ip address
+    LOG.info("start printing getDelegationToken");
+    for(Map.Entry<FederationNamespaceInfo, Token<DelegationTokenIdentifier>> entry: tokens.entrySet()) {
+      LOG.info(entry.getValue().toString());
+    }
+    LOG.info("end printing getDelegationToken");
     // Store it in the federated token manager
     String defaultNs = subclusterResolver.getDefaultNamespace();
-    Token<DelegationTokenIdentifier> defaultToken = tokens.get(defaultNs);
+    LOG.info("defaultNS is " + defaultNs);
+    // wrap the defaultNs into a federationNameSpaceInfo in order to use it as key to search the map
+    FederationNamespaceInfo defaultNsInfo = new FederationNamespaceInfo(null, null, defaultNs);
+
+    Token<DelegationTokenIdentifier> defaultToken = tokens.get(defaultNsInfo);
+    LOG.info("22sherwood: defaultToken is :" + defaultToken );
     FederatedToken federatedToken =
         FederatedToken.newInstance(router.getRouterId(), defaultToken);
     federatedToken.setTokens(
         (Map<FederationNamespaceInfo, Token<? extends TokenIdentifier>>)
         (Map<FederationNamespaceInfo, ?>)tokens);
     TokenStore tokenManager = router.getTokenManager();
+
+    federatedToken.getToken().service = new Text("10.150.16.39:9090");
+    LOG.info("just added the service id");
+    LOG.info(federatedToken.getToken().service.toString());
+
     tokenManager.addToken(federatedToken);
+
+    LOG.info("Sherwood22:-----  when federated token is added to the map: " + federatedToken.getToken().toString());
 
     return (Token<DelegationTokenIdentifier>) federatedToken.getToken();
   }
@@ -450,8 +468,36 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
    */
   public Map<FederationNamespaceInfo, Token<DelegationTokenIdentifier>>
       getDelegationTokens(Text renewer) throws IOException {
-    checkOperation(OperationCategory.WRITE, false);
-    return null;
+    checkOperation(OperationCategory.WRITE);
+
+    // Get the token from each namespace
+    RemoteMethod method = new RemoteMethod("getDelegationToken",
+        new Class<?>[] {Text.class}, renewer);
+    Set<FederationNamespaceInfo> nss = namenodeResolver.getNamespaces();
+    LOG.info("start of namespaces ids");
+    for (FederationNamespaceInfo s:nss) {
+      LOG.info(s.getNameserviceId());
+    }
+    LOG.info("end of namespaces ids");
+    Map<FederationNamespaceInfo, Object> results = rpcClient.invokeConcurrent(
+        nss, method, true, false);
+
+    // Merge the outputs into the map with the proper types
+    Map<FederationNamespaceInfo, Token<DelegationTokenIdentifier>> ret =
+        new TreeMap<>();
+    for (Entry<FederationNamespaceInfo, Object> entry : results.entrySet()) {
+      FederationNamespaceInfo location = entry.getKey();
+      Object value = entry.getValue();
+      if (value instanceof Token) {
+        Token<DelegationTokenIdentifier> token =
+            (Token<DelegationTokenIdentifier>)entry.getValue();
+        LOG.info("nameservice : + " + location.getNameserviceId());
+        LOG.info("sherwood123: " + token.toString());
+        ret.put(location, token);
+      }
+    }
+    LOG.info("return map is " + ret.size());
+    return ret;
   }
 
   @Override // ClientProtocol
@@ -459,17 +505,21 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
       throws IOException {
     checkOperation(OperationCategory.WRITE);
 
+    LOG.info("try to renew the token: " + token.toString());
+
     // Check the State Store for the tokens in each ns
     TokenStore tokenManager = router.getTokenManager();
     Map<String, Token<? extends TokenIdentifier>> tokenMap =
         tokenManager.getTokens(token);
+    LOG.info("sherwood: tokenMap is " + tokenMap.size());
     Map<RemoteLocation, Token<? extends TokenIdentifier>> tokenLocMap =
         new HashMap<RemoteLocation, Token<? extends TokenIdentifier>>();
     for (Entry<String, Token<? extends TokenIdentifier>> entry :
         tokenMap.entrySet()) {
       String nsId = entry.getKey();
+      LOG.info("sherwood: tokenid is " + nsId);
       Token<? extends TokenIdentifier> nsToken = entry.getValue();
-      tokenLocMap.put(new RemoteLocation(nsId, "/"), nsToken);
+      tokenLocMap.put(new RemoteLocation(nsId, nsId), nsToken);
     }
 
     // Renew the token in each namespace
@@ -489,12 +539,14 @@ public class RouterRpcServer extends AbstractService implements ClientProtocol {
         }
       }
     }
+    LOG.info("finish renew the token " + token.toString());
     return ret;
   }
 
   @Override // ClientProtocol
   public void cancelDelegationToken(Token<DelegationTokenIdentifier> token)
       throws IOException {
+    LOG.info("try to cancelDelegationToken" + token.toString());
     checkOperation(OperationCategory.WRITE);
 
     // Check the State Store for the tokens in each ns

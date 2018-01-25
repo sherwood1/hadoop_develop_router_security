@@ -22,6 +22,7 @@ option java_generic_services = true;
 option java_generate_equals_and_hash = true;
 package hadoop.hdfs;
 
+import "Security.proto";
 
 /////////////////////////////////////////////////
 // Membership
@@ -162,5 +163,84 @@ message GetMountTableEntriesRequestProto {
 message GetMountTableEntriesResponseProto {
   repeated MountTableRecordProto entries = 1;
   optional uint64 timestamp = 2;
+}
+
+/////////////////////////////////////////////////
+// Routers
+/////////////////////////////////////////////////
+
+message StateStoreVersionRecordProto {
+  optional uint64 membershipVersion = 1;
+  optional uint64 mountTableVersion = 2;
+  optional uint64 rebalancerVersion = 3;
+  optional uint64 pathLockVersion = 4;
+  optional uint64 tokenVersion = 5;
+}
+
+message RouterRecordProto {
+  optional uint64 dateCreated = 1;
+  optional uint64 dateModified = 2;
+  optional string address = 3;
+  optional string status = 4;
+  optional StateStoreVersionRecordProto stateStoreVersion = 5;
+  optional string buildVersion = 6;
+  optional string compileInfo = 7;
+  optional uint64 dateStarted = 8;
+}
+
+message GetRouterRegistrationRequestProto {
+  optional string routerId = 1;
+}
+
+message GetRouterRegistrationResponseProto {
+  optional RouterRecordProto router = 1;
+}
+
+message GetRouterRegistrationsRequestProto {
+}
+
+message GetRouterRegistrationsResponseProto {
+  optional uint64 timestamp = 1;
+  repeated RouterRecordProto routers = 2;
+}
+
+message RouterHeartbeatRequestProto {
+  optional RouterRecordProto router = 1;
+}
+
+message RouterHeartbeatResponseProto {
+  optional bool status = 1;
+}
+
+/////////////////////////////////////////////////
+// Tokens
+/////////////////////////////////////////////////
+
+message SubclusterTokenProto {
+  optional string nameserviceId = 1;
+  optional hadoop.common.TokenProto token = 2;
+}
+
+message FederatedTokenRecordProto {
+  optional uint64 dateCreated = 1;
+  optional uint64 dateModified = 2;
+  optional string routerId = 3;
+  optional hadoop.common.TokenProto token = 4;
+  repeated SubclusterTokenProto tokens = 5;
+}
+
+message AddFederatedTokenRequestProto {
+  optional FederatedTokenRecordProto token = 1;
+}
+
+message AddFederatedTokenResponseProto {
+  optional bool status = 1;
+}
+
+message GetFederatedTokensRequestProto {
+}
+
+message GetFederatedTokensResponseProto {
+  repeated FederatedTokenRecordProto tokens = 1;
 }
 

@@ -288,12 +288,12 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       DeleteSnapshotResponseProto.newBuilder().build();
   static final RenameSnapshotResponseProto VOID_RENAME_SNAPSHOT_RESPONSE =
       RenameSnapshotResponseProto.newBuilder().build();
-  static final AllowSnapshotResponseProto VOID_ALLOW_SNAPSHOT_RESPONSE = 
+  static final AllowSnapshotResponseProto VOID_ALLOW_SNAPSHOT_RESPONSE =
       AllowSnapshotResponseProto.newBuilder().build();
   static final DisallowSnapshotResponseProto VOID_DISALLOW_SNAPSHOT_RESPONSE =
       DisallowSnapshotResponseProto.newBuilder().build();
-  static final GetSnapshottableDirListingResponseProto 
-      NULL_GET_SNAPSHOTTABLE_DIR_LISTING_RESPONSE = 
+  static final GetSnapshottableDirListingResponseProto
+      NULL_GET_SNAPSHOTTABLE_DIR_LISTING_RESPONSE =
       GetSnapshottableDirListingResponseProto.newBuilder().build();
   static final SetStoragePolicyResponseProto VOID_SET_STORAGE_POLICY_RESPONSE =
       SetStoragePolicyResponseProto.newBuilder().build();
@@ -301,70 +301,70 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       VOID_UNSET_STORAGE_POLICY_RESPONSE =
       UnsetStoragePolicyResponseProto.newBuilder().build();
 
-  private static final CreateResponseProto VOID_CREATE_RESPONSE = 
+  private static final CreateResponseProto VOID_CREATE_RESPONSE =
   CreateResponseProto.newBuilder().build();
 
-  private static final SetPermissionResponseProto VOID_SET_PERM_RESPONSE = 
+  private static final SetPermissionResponseProto VOID_SET_PERM_RESPONSE =
   SetPermissionResponseProto.newBuilder().build();
 
-  private static final SetOwnerResponseProto VOID_SET_OWNER_RESPONSE = 
+  private static final SetOwnerResponseProto VOID_SET_OWNER_RESPONSE =
   SetOwnerResponseProto.newBuilder().build();
 
-  private static final AbandonBlockResponseProto VOID_ADD_BLOCK_RESPONSE = 
+  private static final AbandonBlockResponseProto VOID_ADD_BLOCK_RESPONSE =
   AbandonBlockResponseProto.newBuilder().build();
 
-  private static final ReportBadBlocksResponseProto VOID_REP_BAD_BLOCK_RESPONSE = 
+  private static final ReportBadBlocksResponseProto VOID_REP_BAD_BLOCK_RESPONSE =
   ReportBadBlocksResponseProto.newBuilder().build();
 
-  private static final ConcatResponseProto VOID_CONCAT_RESPONSE = 
+  private static final ConcatResponseProto VOID_CONCAT_RESPONSE =
   ConcatResponseProto.newBuilder().build();
 
-  private static final Rename2ResponseProto VOID_RENAME2_RESPONSE = 
+  private static final Rename2ResponseProto VOID_RENAME2_RESPONSE =
   Rename2ResponseProto.newBuilder().build();
 
-  private static final GetListingResponseProto VOID_GETLISTING_RESPONSE = 
+  private static final GetListingResponseProto VOID_GETLISTING_RESPONSE =
   GetListingResponseProto.newBuilder().build();
 
-  private static final RenewLeaseResponseProto VOID_RENEWLEASE_RESPONSE = 
+  private static final RenewLeaseResponseProto VOID_RENEWLEASE_RESPONSE =
   RenewLeaseResponseProto.newBuilder().build();
 
   private static final RefreshNodesResponseProto VOID_REFRESHNODES_RESPONSE =
   RefreshNodesResponseProto.newBuilder().build();
 
-  private static final FinalizeUpgradeResponseProto VOID_FINALIZEUPGRADE_RESPONSE = 
+  private static final FinalizeUpgradeResponseProto VOID_FINALIZEUPGRADE_RESPONSE =
   FinalizeUpgradeResponseProto.newBuilder().build();
 
-  private static final MetaSaveResponseProto VOID_METASAVE_RESPONSE = 
+  private static final MetaSaveResponseProto VOID_METASAVE_RESPONSE =
   MetaSaveResponseProto.newBuilder().build();
 
-  private static final GetFileInfoResponseProto VOID_GETFILEINFO_RESPONSE = 
+  private static final GetFileInfoResponseProto VOID_GETFILEINFO_RESPONSE =
   GetFileInfoResponseProto.newBuilder().build();
 
-  private static final GetFileLinkInfoResponseProto VOID_GETFILELINKINFO_RESPONSE = 
+  private static final GetFileLinkInfoResponseProto VOID_GETFILELINKINFO_RESPONSE =
   GetFileLinkInfoResponseProto.newBuilder().build();
 
-  private static final SetQuotaResponseProto VOID_SETQUOTA_RESPONSE = 
+  private static final SetQuotaResponseProto VOID_SETQUOTA_RESPONSE =
   SetQuotaResponseProto.newBuilder().build();
 
-  private static final FsyncResponseProto VOID_FSYNC_RESPONSE = 
+  private static final FsyncResponseProto VOID_FSYNC_RESPONSE =
   FsyncResponseProto.newBuilder().build();
 
-  private static final SetTimesResponseProto VOID_SETTIMES_RESPONSE = 
+  private static final SetTimesResponseProto VOID_SETTIMES_RESPONSE =
   SetTimesResponseProto.newBuilder().build();
 
-  private static final CreateSymlinkResponseProto VOID_CREATESYMLINK_RESPONSE = 
+  private static final CreateSymlinkResponseProto VOID_CREATESYMLINK_RESPONSE =
   CreateSymlinkResponseProto.newBuilder().build();
 
   private static final UpdatePipelineResponseProto
-    VOID_UPDATEPIPELINE_RESPONSE = 
+    VOID_UPDATEPIPELINE_RESPONSE =
   UpdatePipelineResponseProto.newBuilder().build();
 
-  private static final CancelDelegationTokenResponseProto 
-      VOID_CANCELDELEGATIONTOKEN_RESPONSE = 
+  private static final CancelDelegationTokenResponseProto
+      VOID_CANCELDELEGATIONTOKEN_RESPONSE =
           CancelDelegationTokenResponseProto.newBuilder().build();
 
-  private static final SetBalancerBandwidthResponseProto 
-      VOID_SETBALANCERBANDWIDTH_RESPONSE = 
+  private static final SetBalancerBandwidthResponseProto
+      VOID_SETBALANCERBANDWIDTH_RESPONSE =
         SetBalancerBandwidthResponseProto.newBuilder().build();
 
   private static final SetAclResponseProto
@@ -384,10 +384,10 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
 
   private static final RemoveAclResponseProto
     VOID_REMOVEACL_RESPONSE = RemoveAclResponseProto.getDefaultInstance();
-  
+
   private static final SetXAttrResponseProto
     VOID_SETXATTR_RESPONSE = SetXAttrResponseProto.getDefaultInstance();
-  
+
   private static final RemoveXAttrResponseProto
     VOID_REMOVEXATTR_RESPONSE = RemoveXAttrResponseProto.getDefaultInstance();
 
@@ -396,7 +396,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
 
   /**
    * Constructor
-   * 
+   *
    * @param server - the NN server
    * @throws IOException
    */
@@ -437,7 +437,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
     }
   }
 
-  
+
   @Override
   public CreateResponseProto create(RpcController controller,
       CreateRequestProto req) throws ServiceException {
@@ -491,7 +491,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
   public SetReplicationResponseProto setReplication(RpcController controller,
       SetReplicationRequestProto req) throws ServiceException {
     try {
-      boolean result = 
+      boolean result =
           server.setReplication(req.getSrc(), (short) req.getReplication());
       return SetReplicationResponseProto.newBuilder().setResult(result).build();
     } catch (IOException e) {
@@ -515,7 +515,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
   public SetOwnerResponseProto setOwner(RpcController controller,
       SetOwnerRequestProto req) throws ServiceException {
     try {
-      server.setOwner(req.getSrc(), 
+      server.setOwner(req.getSrc(),
           req.hasUsername() ? req.getUsername() : null,
           req.hasGroupname() ? req.getGroupname() : null);
     } catch (IOException e) {
@@ -539,7 +539,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
   @Override
   public AddBlockResponseProto addBlock(RpcController controller,
       AddBlockRequestProto req) throws ServiceException {
-    
+
     try {
       List<DatanodeInfoProto> excl = req.getExcludeNodesList();
       List<String> favor = req.getFavoredNodesList();
@@ -590,7 +590,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
   public CompleteResponseProto complete(RpcController controller,
       CompleteRequestProto req) throws ServiceException {
     try {
-      boolean result = 
+      boolean result =
           server.complete(req.getSrc(), req.getClientName(),
           req.hasLast() ? PBHelperClient.convert(req.getLast()) : null,
           req.hasFileId() ? req.getFileId() : HdfsConstants.GRANDFATHER_INODE_ID);
@@ -599,7 +599,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public ReportBadBlocksResponseProto reportBadBlocks(RpcController controller,
       ReportBadBlocksRequestProto req) throws ServiceException {
@@ -652,11 +652,11 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
     }
 
     try {
-      server.rename2(req.getSrc(), req.getDst(), 
+      server.rename2(req.getSrc(), req.getDst(),
           optionList.toArray(new Rename[optionList.size()]));
     } catch (IOException e) {
       throw new ServiceException(e);
-    }   
+    }
     return VOID_RENAME2_RESPONSE;
   }
 
@@ -716,7 +716,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public RenewLeaseResponseProto renewLease(RpcController controller,
       RenewLeaseRequestProto req) throws ServiceException {
@@ -738,7 +738,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public RestoreFailedStorageResponseProto restoreFailedStorage(
       RpcController controller, RestoreFailedStorageRequestProto req)
@@ -837,7 +837,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public SaveNamespaceResponseProto saveNamespace(RpcController controller,
       SaveNamespaceRequestProto req) throws ServiceException {
@@ -936,12 +936,12 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       GetFileInfoRequestProto req) throws ServiceException {
     try {
       HdfsFileStatus result = server.getFileInfo(req.getSrc());
- 
+
       if (result != null) {
         return GetFileInfoResponseProto.newBuilder().setFs(
             PBHelperClient.convert(result)).build();
       }
-      return VOID_GETFILEINFO_RESPONSE;      
+      return VOID_GETFILEINFO_RESPONSE;
     } catch (IOException e) {
       throw new ServiceException(e);
     }
@@ -956,7 +956,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
         return GetFileLinkInfoResponseProto.newBuilder().setFs(
             PBHelperClient.convert(result)).build();
       } else {
-        return VOID_GETFILELINKINFO_RESPONSE;      
+        return VOID_GETFILELINKINFO_RESPONSE;
       }
 
     } catch (IOException e) {
@@ -976,7 +976,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public SetQuotaResponseProto setQuota(RpcController controller,
       SetQuotaRequestProto req) throws ServiceException {
@@ -990,7 +990,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public FsyncResponseProto fsync(RpcController controller,
       FsyncRequestProto req) throws ServiceException {
@@ -1081,7 +1081,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
     try {
       Token<DelegationTokenIdentifier> token = server
           .getDelegationToken(new Text(req.getRenewer()));
-      GetDelegationTokenResponseProto.Builder rspBuilder = 
+      GetDelegationTokenResponseProto.Builder rspBuilder =
           GetDelegationTokenResponseProto.newBuilder();
       if (token != null) {
         rspBuilder.setToken(PBHelperClient.convert(token));
@@ -1097,6 +1097,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       RpcController controller, RenewDelegationTokenRequestProto req)
       throws ServiceException {
     try {
+      Thread.currentThread().getStackTrace().toString();
       long result = server.renewDelegationToken(PBHelperClient
           .convertDelegationToken(req.getToken()));
       return RenewDelegationTokenResponseProto.newBuilder()
@@ -1136,7 +1137,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       RpcController controller, GetDataEncryptionKeyRequestProto request)
       throws ServiceException {
     try {
-      GetDataEncryptionKeyResponseProto.Builder builder = 
+      GetDataEncryptionKeyResponseProto.Builder builder =
           GetDataEncryptionKeyResponseProto.newBuilder();
       DataEncryptionKey encryptionKey = server.getDataEncryptionKey();
       if (encryptionKey != null) {
@@ -1175,7 +1176,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public AllowSnapshotResponseProto allowSnapshot(RpcController controller,
       AllowSnapshotRequestProto req) throws ServiceException {
@@ -1245,7 +1246,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
 
   @Override
   public IsFileClosedResponseProto isFileClosed(
-      RpcController controller, IsFileClosedRequestProto request) 
+      RpcController controller, IsFileClosedRequestProto request)
       throws ServiceException {
     try {
       boolean result = server.isFileClosed(request.getSrc());
@@ -1329,7 +1330,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public ModifyCachePoolResponseProto modifyCachePool(RpcController controller,
       ModifyCachePoolRequestProto request) throws ServiceException {
@@ -1438,7 +1439,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public CreateEncryptionZoneResponseProto createEncryptionZone(
     RpcController controller, CreateEncryptionZoneRequestProto req)
@@ -1576,7 +1577,7 @@ public class ClientNamenodeProtocolServerSideTranslatorPB implements
       throw new ServiceException(e);
     }
   }
-  
+
   @Override
   public RemoveXAttrResponseProto removeXAttr(RpcController controller,
       RemoveXAttrRequestProto req) throws ServiceException {

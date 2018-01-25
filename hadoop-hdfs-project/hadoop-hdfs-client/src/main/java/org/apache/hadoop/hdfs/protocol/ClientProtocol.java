@@ -60,8 +60,7 @@ import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_NAMENODE_KE
 
 /**********************************************************************
  * ClientProtocol is used by user code via the DistributedFileSystem class to
- * communicate with the NameNode.  User code can manipulate the directory
- * namespace, as well as open/close file streams, etc.
+ getMasterKeyId * namespace, as well as open/close file streams, etc.
  *
  **********************************************************************/
 @InterfaceAudience.Private

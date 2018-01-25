@@ -104,7 +104,7 @@ public abstract class FederatedToken extends BaseRecord implements PBRecord {
   public SortedMap<String, String> getPrimaryKeys() {
     SortedMap<String, String> map = new TreeMap<String, String>();
     map.put("routerId", this.getRouterId());
-    map.put("token", this.getToken().toString());
+    map.put("token", new String(this.getToken().getIdentifier()));
     return map;
   }
 

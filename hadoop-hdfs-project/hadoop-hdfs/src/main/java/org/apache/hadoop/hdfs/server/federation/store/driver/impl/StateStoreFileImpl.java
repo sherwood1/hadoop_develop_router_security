@@ -112,6 +112,7 @@ public class StateStoreFileImpl extends StateStoreFileBaseImpl {
 
   @Override
   protected <T extends BaseRecord> BufferedWriter getWriter(String filename) {
+    LOG.info("get writter in stateStroreFile Writing file: {}", filename);
     BufferedWriter writer = null;
     try {
       LOG.debug("Writing file: {}", filename);
@@ -123,6 +124,7 @@ public class StateStoreFileImpl extends StateStoreFileBaseImpl {
     } catch (IOException e) {
       LOG.error("Cannot open write stream for record {}", filename, e);
     }
+    LOG.info("get writter in stateStroreFile writter: " + writer);
     return writer;
   }
 
